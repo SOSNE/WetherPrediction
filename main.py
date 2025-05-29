@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
 import tensorflow as tf
-from pyasn1_modules.rfc5755 import Target
+from sklearn.preprocessing import StandardScaler
+
 
 columns = ['date', 'tavg', 'tmin', 'tmax', 'prcp', 'snow',
            'wdir', 'wspd', 'wpgt', 'pres', 'tsun', 'coco']
@@ -25,12 +26,18 @@ def prepare_data(data):
 
 _input, target = prepare_data(df.to_numpy())
 
+nsamples, ntimesteps, nfeatures = _input.shape
+scaler = StandardScaler()
+_input = scaler.fit_transform(_input.reshape(-1, nfeatures))
+_input = _input.reshape(nsamples, ntimesteps, nfeatures)
+
+target = scaler.fit_transform(target)
 
 model = tf.keras.Sequential([
-  tf.keras.layers.Input(shape=(7, 9)),
-  tf.keras.layers.LSTM(64, activation='relu'),
-  tf.keras.layers.Dropout(0.2),
-  tf.keras.layers.Dense(9)
+    tf.keras.layers.Input(shape=(7, 9)),
+    tf.keras.layers.LSTM(64, activation='relu'),
+    tf.keras.layers.Dropout(0.1),
+    tf.keras.layers.Dense(9)
 ])
 
 model.compile(optimizer='adam', loss='mse')
