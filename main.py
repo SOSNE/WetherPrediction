@@ -1,48 +1,38 @@
-import pandas as pd
+from tensorflow.keras.models import load_model
+from tools.load_data import get_data
+import joblib
 import numpy as np
-import tensorflow as tf
-from sklearn.preprocessing import StandardScaler
 
+np.set_printoptions(suppress=True)
 
 columns = ['date', 'tavg', 'tmin', 'tmax', 'prcp', 'snow',
            'wdir', 'wspd', 'wpgt', 'pres', 'tsun', 'coco']
 
-df = pd.read_csv('data/12375.csv', header=None, names=columns)
-df = df.drop(columns=['tsun', 'coco'])
+labels = [
+    "The average air temperature in °C",
+    "The minimum air temperature in °C",
+    "The maximum air temperature in °C",
+    "The daily precipitation total in mm",
+    "The maximum snow depth in mm",
+    "The average wind direction in degrees (°)",
+    "The average wind speed in km/h",
+    "The peak wind gust in km/h",
+    "The average sea-level air pressure in hPa"
+]
 
-df = df[(df['date'] >= "2020-05-15") & (df['date'] <= "2025-05-20")]
-df['date'] = pd.to_datetime(df['date'])
-df['snow'] = df['snow'].fillna(0)
-df['prcp'] = df['prcp'].fillna(0)
-df['wpgt'] = df['wpgt'].ffill()
 
+_input, target = get_data(path="data/Weather Data 12566.csv", columns=columns, time_star = "2025-05-20", time_stop = "2025-05-31")
+model = load_model("models/weather_model_1.h5")
+scaler = joblib.load("models/weather_model_1_scaler.pkl")
+original_target_data = scaler.inverse_transform([target[4]])
 
-def prepare_data(data):
-    _input, target = [], []
-    for i in range(len(data)-7):
-        _input.append(data[i:i+7][:, 1:])
-        target.append(data[i+7][1:])
-    return np.array(_input, dtype=np.float64), np.array(target, dtype=np.float64)
+_input = _input[2]
+_input = np.expand_dims(_input, axis=0)
 
-_input, target = prepare_data(df.to_numpy())
+prediction = model.predict(_input)
 
-nsamples, ntimesteps, nfeatures = _input.shape
-scaler = StandardScaler()
-_input = scaler.fit_transform(_input.reshape(-1, nfeatures))
-_input = _input.reshape(nsamples, ntimesteps, nfeatures)
+original_prediction_data = scaler.inverse_transform(prediction)
 
-target = scaler.fit_transform(target)
+for i, label in enumerate(labels):
+    print(f"{label}: {original_prediction_data[0][i]:.2f}")
 
-model = tf.keras.Sequential([
-    tf.keras.layers.Input(shape=(7, 9)),
-    tf.keras.layers.LSTM(64, return_sequences=True),
-    tf.keras.layers.LSTM(32),
-    tf.keras.layers.Dense(32, activation='relu'),
-    tf.keras.layers.Dense(9)
-])
-
-model.compile(optimizer='adam', loss='mse')
-
-model.fit(_input, target, epochs=10)
-
-model.save("models/weather_model_1.h5")
