@@ -20,4 +20,4 @@ model.compile(optimizer='adam', loss='mse', metrics=['mae'])
 
 model.fit(_input, target, epochs=1000, validation_split=0.2)
 
-model.save("../models/weather_model_4.h5")
+model.save("../models/weather_model_1.h5")

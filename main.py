@@ -22,27 +22,24 @@ labels = [
 ]
 
 
-model = load_model("models/weather_model_3.h5")
-scaler_input = joblib.load("models/weather_model_3_input_scaler.pkl")
-scaler_target = joblib.load("models/weather_model_3_target_scaler.pkl")
+model = load_model("models/weather_model_1.h5")
+scaler_input = joblib.load("models/weather_model_1_input_scaler.pkl")
+scaler_target = joblib.load("models/weather_model_1_target_scaler.pkl")
 
-_input, target, dates = get_data(path="data/Krakow Weather History (1).csv", columns=columns,
-                          time_star = "2024-06-10", time_stop = "2025-06-07",
+_input, target, dates = get_data(path="data/WeatherData.csv", columns=columns,
+                          time_star = "2024-06-13", time_stop = "2025-06-10",
                           i_scaler=scaler_input, t_scaler=scaler_target)
 
 
-_input = _input[1]
+_input = _input[-1]
 _input = np.expand_dims(_input, axis=0)
 
 prediction = model.predict(_input)
 
-# loss_fn = tf.keras.losses.MeanSquaredError()
-# loss_value = loss_fn(target[2], prediction)
 
 original_prediction_data = scaler_target.inverse_transform(prediction)
 
 for i, label in enumerate(labels):
     print(f"{label}: {original_prediction_data[0][i]:.2f}")
-print((dates[1][-1]+ pd.Timedelta(days=1))[0])
+print((dates[-1][-1]+ pd.Timedelta(days=1))[0])
 
-# print("Loss:", loss_value.numpy())

@@ -29,8 +29,8 @@ def scale_data(_input, target, i_scaler = None ,t_scaler = None, for_training = 
 
     if for_training:
         target = target_scaler.fit_transform(target)
-        joblib.dump(input_scaler, "../models/weather_model_4_input_scaler.pkl")
-        joblib.dump(target_scaler, "../models/weather_model_4_target_scaler.pkl")
+        joblib.dump(input_scaler, "../models/weather_model_1_input_scaler.pkl")
+        joblib.dump(target_scaler, "../models/weather_model_1_target_scaler.pkl")
 
     return _input, target
 
